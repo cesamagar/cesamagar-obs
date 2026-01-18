@@ -2,92 +2,74 @@
 
 <script>
 (function() {
-    function processChords() {
-        console.log("Iniciando transformación de acordes...");
+    function transformar() {
+        console.log("--- RASTREADOR DE ACORDES ACTIVO ---");
         
-        // Buscamos cualquier bloque que contenga 'chords' en su clase o lenguaje
-        const blocks = document.querySelectorAll('pre code[class*="chords"], pre[class*="chords"], .language-chords');
-        
-        if (blocks.length === 0) {
-            console.log("No se encontraron bloques de acordes en esta página.");
-            return;
-        }
+        // 1. Buscamos TODOS los bloques de código de la página
+        const todosLosBloques = document.querySelectorAll('pre');
+        console.log("Bloques detectados en total:", todosLosBloques.length);
 
-        blocks.forEach((block, index) => {
-            const rawContent = block.innerText.trim();
-            // Evitamos procesar el mismo bloque dos veces
-            if (block.dataset.processed === "true") return;
-            block.dataset.processed = "true";
+        todosLosBloques.forEach((bloque, i) => {
+            const texto = bloque.innerText;
+            
+            // 2. Si el bloque ya está procesado o está vacío, saltamos
+            if (bloque.dataset.musicDone === "true" || !texto.trim()) return;
 
-            try {
-                // Detectar si es ChordPro (con []) o Texto Plano (encima de la letra)
-                const isChordPro = rawContent.includes('[') && rawContent.includes(']');
-                const parser = isChordPro 
-                    ? new ChordSheetJS.ChordProParser() 
-                    : new ChordSheetJS.ChordsOverWordsParser();
-                
-                let song = parser.parse(rawContent);
-                const formatter = new ChordSheetJS.HtmlTableFormatter();
+            // 3. ¿Parece una canción? (Buscamos si tiene [Acordes] o patrones de música)
+            const tieneCorchetes = texto.includes('[') && texto.includes(']');
+            const tieneClaseChords = bloque.innerHTML.includes('chords') || bloque.className.includes('chords');
 
-                const container = document.createElement('div');
-                container.style.cssText = "background:#1e1e1e; color:#eee; padding:1.5rem; border-radius:10px; margin:1.5rem 0; border:1px solid #333; overflow-x:auto;";
-                
-                const render = (s) => formatter.format(s);
+            if (tieneCorchetes || tieneClaseChords) {
+                console.log("¡CANCION ENCONTRADA en el bloque!", i);
+                try {
+                    const parser = tieneCorchetes ? 
+                        new ChordSheetJS.ChordProParser() : 
+                        new ChordSheetJS.ChordsOverWordsParser();
+                    
+                    let song = parser.parse(texto);
+                    const formatter = new ChordSheetJS.HtmlTableFormatter();
+                    bloque.dataset.musicDone = "true";
 
-                container.innerHTML = `
-                    <div style="margin-bottom:1rem; display:flex; gap:10px; align-items:center;">
-                        <button id="up-${index}" style="padding:4px 12px; background:#444; color:white; border:none; border-radius:4px; cursor:pointer; font-size:0.8rem;">+1 Tono</button>
-                        <button id="down-${index}" style="padding:4px 12px; background:#444; color:white; border:none; border-radius:4px; cursor:pointer; font-size:0.8rem;">-1 Tono</button>
-                        <span style="font-size:0.7rem; color:#888;">(Interactivo)</span>
-                    </div>
-                    <div id="canvas-${index}" class="chord-rendered-content">${render(song)}</div>
-                `;
+                    const div = document.createElement('div');
+                    div.style.cssText = "background:#1e1e1e; color:#eee; padding:20px; border-radius:10px; margin:20px 0; border:1px solid #444;";
+                    
+                    const dibujar = (s) => formatter.format(s);
 
-                // Reemplazamos el bloque original (buscando el contenedor 'pre' más cercano)
-                const toReplace = block.closest('pre') || block;
-                toReplace.replaceWith(container);
+                    div.innerHTML = `
+                        <div style="margin-bottom:15px; display:flex; gap:10px;">
+                            <button id="u-${i}" style="padding:5px 12px; background:#333; color:white; border:1px solid #555; cursor:pointer;">+1 Tono</button>
+                            <button id="d-${i}" style="padding:5px 12px; background:#333; color:white; border:1px solid #555; cursor:pointer;">-1 Tono</button>
+                        </div>
+                        <div id="c-${i}" class="musica-render">${dibujar(song)}</div>
+                    `;
 
-                container.querySelector(`#up-${index}`).onclick = () => {
-                    song = song.transpose(1);
-                    container.querySelector(`#canvas-${index}`).innerHTML = render(song);
-                };
-                container.querySelector(`#down-${index}`).onclick = () => {
-                    song = song.transpose(-1);
-                    container.querySelector(`#canvas-${index}`).innerHTML = render(song);
-                };
-            } catch (e) {
-                console.error("Error al renderizar bloque " + index, e);
+                    bloque.replaceWith(div);
+
+                    div.querySelector(`#u-${i}`).onclick = () => {
+                        song = song.transpose(1);
+                        div.querySelector(`#c-${i}`).innerHTML = dibujar(song);
+                    };
+                    div.querySelector(`#d-${i}`).onclick = () => {
+                        song = song.transpose(-1);
+                        div.querySelector(`#c-${i}`).innerHTML = dibujar(song);
+                    };
+                } catch (err) {
+                    console.error("Error al renderizar:", err);
+                }
             }
         });
     }
 
-    // Ejecución inmediata y con retardo por si el contenido es dinámico
-    window.addEventListener('load', processChords);
-    document.addEventListener('DOMContentLoaded', processChords);
-    setTimeout(processChords, 1000); // Re-intento tras 1 segundo
+    // Intentamos ejecutar en varios momentos para asegurar el tiro
+    window.addEventListener('load', transformar);
+    setTimeout(transformar, 500);
+    setTimeout(transformar, 2000);
 })();
 </script>
 
 <style>
-    /* Estilos para asegurar la alineación de acordes */
-    .chord-rendered-content .chord { 
-        color: #5db9ff !important; 
-        font-weight: bold !important; 
-        height: 1.3em; 
-        display: block; 
-    }
-    .chord-rendered-content .lyrics { 
-        font-family: 'Courier New', monospace !important; 
-        white-space: pre !important; 
-        color: #ccc; 
-    }
-    .chord-rendered-content table { 
-        border-spacing: 0; 
-        margin-bottom: 5px; 
-        border: none !important; 
-    }
-    .chord-rendered-content td { 
-        padding: 0 1px !important; 
-        border: none !important; 
-    }
+    .musica-render .chord { color: #5db9ff !important; font-weight: bold; height: 1.3em; display: block; }
+    .musica-render .lyrics { font-family: 'Courier New', monospace; white-space: pre; color: #ccc; }
+    .musica-render table { border-spacing: 0; margin-bottom: 5px; border:none; }
+    .musica-render td { padding: 0 2px; border:none; }
 </style>
