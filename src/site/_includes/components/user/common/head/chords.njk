@@ -1,112 +1,113 @@
-<script src="https://unpkg.com/chordsheetjs@latest/dist/chordsheetjs.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chordsheetjs@8.5.1/dist/chordsheetjs.umd.js" crossorigin="anonymous"></script>
 
 <script>
 (function() {
-    function transformarSiEstaListo() {
-        // Verificamos si la librería ya cargó en el navegador
-        if (typeof ChordSheetJS === 'undefined') {
-            console.log("Esperando a que ChordSheetJS cargue...");
-            return; // Si no está lista, salimos y esperamos al siguiente ciclo
-        }
+    let attempts = 0;
 
+    function init() {
+        // Verificamos si la librería ya está disponible en la memoria del navegador
+        if (typeof ChordSheetJS !== 'undefined') {
+            console.log("¡Librería cargada con éxito!");
+            transformarNotas();
+            // Activamos un observador por si cambias de página en la web
+            const observer = new MutationObserver(transformarNotas);
+            observer.observe(document.body, { childList: true, subtree: true });
+        } else {
+            attempts++;
+            if (attempts < 20) { // Reintenta durante 20 segundos
+                console.log("Tipo MIME corregido, esperando respuesta del servidor... " + attempts);
+                setTimeout(init, 1000);
+            } else {
+                console.error("Error crítico: No se pudo conectar con el servidor de música.");
+            }
+        }
+    }
+
+    function transformarNotas() {
         const bloques = document.querySelectorAll('pre');
         
         bloques.forEach((pre, i) => {
-            if (pre.dataset.musicDone === "true" || !pre.innerText.trim()) return;
-
+            if (pre.dataset.musicDone === "true") return;
+            
             const texto = pre.innerText;
-            // Criterio para detectar ChordPro
-            const esMusica = texto.includes('[') && texto.includes(']') || texto.includes('{title:');
-
-            if (esMusica) {
-                console.log("¡Transformando canción encontrada!");
+            // Detectamos si es formato ChordPro por los corchetes
+            if (texto.includes('[') && texto.includes(']')) {
                 try {
-                    // Usamos el parser de ChordPro
                     const parser = new ChordSheetJS.ChordProParser();
-                    let song = parser.parse(texto);
-                    const formatter = new ChordSheetJS.HtmlTableFormatter();
-                    
+                    let cancion = parser.parse(texto);
+                    const formateador = new ChordSheetJS.HtmlTableFormatter();
                     pre.dataset.musicDone = "true";
+
                     const div = document.createElement('div');
-                    div.className = 'chord-sheet-container';
-                    
-                    const dibujar = (s) => formatter.format(s);
+                    div.className = 'cancion-container';
+                    const dibujar = (s) => formateador.format(s);
 
                     div.innerHTML = `
-                        <div class="chord-controls">
-                            <button id="up-${i}" class="c-btn">+1 Tono</button>
-                            <button id="down-${i}" class="c-btn">-1 Tono</button>
-                            <span class="c-tag">INTERACTIVO</span>
+                        <div class="panel-control">
+                            <button id="u-${i}" class="btn-t">Subir Tono</button>
+                            <button id="d-${i}" class="btn-t">Bajar Tono</button>
+                            <span class="tag-musica">MODO INTERACTIVO</span>
                         </div>
-                        <div id="canvas-${i}" class="c-render">${dibujar(song)}</div>
+                        <div id="v-${i}" class="v-musica">${dibujar(cancion)}</div>
                     `;
 
                     pre.replaceWith(div);
 
-                    div.querySelector(`#up-${i}`).onclick = () => {
-                        song = song.transpose(1);
-                        div.querySelector(`#canvas-${i}`).innerHTML = dibujar(song);
+                    div.querySelector(`#u-${i}`).onclick = () => {
+                        cancion = cancion.transpose(1);
+                        div.querySelector(`#v-${i}`).innerHTML = dibujar(cancion);
                     };
-                    div.querySelector(`#down-${i}`).onclick = () => {
-                        song = song.transpose(-1);
-                        div.querySelector(`#canvas-${i}`).innerHTML = dibujar(song);
+                    div.querySelector(`#d-${i}`).onclick = () => {
+                        cancion = cancion.transpose(-1);
+                        div.querySelector(`#v-${i}`).innerHTML = dibujar(cancion);
                     };
-                } catch (err) {
-                    console.error("Fallo al procesar acordes:", err);
-                }
+                } catch (e) { console.error("Error en renderizado", e); }
             }
         });
     }
 
-    // Ejecutamos el rastreador cada segundo para asegurar que pille la librería y el contenido
-    setInterval(transformarSiEstaListo, 1000);
+    init();
 })();
 </script>
 
 <style>
-    .chord-sheet-container {
-        background: #181818 !important;
-        color: #e0e0e0 !important;
+    .cancion-container {
+        background: #121212 !important;
+        color: #efefef !important;
         padding: 20px !important;
-        border-radius: 12px;
-        margin: 25px 0;
+        border-radius: 8px;
+        margin: 20px 0;
         border: 1px solid #333;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
     }
-    .chord-controls {
+    .panel-control {
         display: flex;
-        gap: 12px;
+        gap: 10px;
         margin-bottom: 20px;
         align-items: center;
-        border-bottom: 1px solid #333;
-        padding-bottom: 12px;
+        border-bottom: 1px solid #222;
+        padding-bottom: 10px;
     }
-    .c-btn {
-        background: #2a2a2a;
-        color: #fff;
+    .btn-t {
+        background: #2c2c2c;
+        color: white;
         border: 1px solid #444;
-        padding: 6px 14px;
-        border-radius: 6px;
+        padding: 5px 12px;
+        border-radius: 4px;
         cursor: pointer;
         font-size: 13px;
-        transition: all 0.2s;
     }
-    .c-btn:hover { background: #404040; border-color: #666; }
-    .c-tag { font-size: 10px; color: #666; font-weight: bold; letter-spacing: 1px; }
+    .btn-t:hover { background: #3d3d3d; }
+    .tag-musica { font-size: 10px; color: #666; font-weight: bold; }
     
-    /* Estilos críticos para mantener los acordes alineados */
-    .c-render table { border-collapse: collapse !important; border: none !important; width: auto !important; }
-    .c-render td { padding: 0 2px !important; border: none !important; line-height: 1.2; }
-    .c-render .chord { 
-        color: #4db6ac !important; /* Color turquesa para los acordes */
+    /* Ajustes para que no se muevan los acordes */
+    .v-musica table { border-collapse: collapse !important; border: none !important; width: auto !important; }
+    .v-musica td { padding: 0 2px !important; border: none !important; }
+    .v-musica .chord { 
+        color: #4db6ac !important; 
         font-weight: bold; 
-        font-family: 'Courier New', monospace;
-        height: 1.5em;
+        height: 1.4em;
         display: block;
+        font-family: monospace;
     }
-    .c-render .lyrics { 
-        font-family: 'Courier New', monospace; 
-        white-space: pre;
-        color: #bbb;
-    }
+    .v-musica .lyrics { font-family: monospace; white-space: pre; color: #aaa; }
 </style>
