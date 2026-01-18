@@ -1,92 +1,80 @@
-<script src="/js/chordsheetjs.js"></script>
+<script src="/static/chordsheetjs.js"></script>
 
 <script>
 (function() {
-    function transformarCanciones() {
-        // Verificamos que la librería esté cargada en memoria
-        if (typeof ChordSheetJS === 'undefined') return;
+    function inicializar() {
+        // Verificamos si la librería ya está en la memoria del navegador
+        if (typeof ChordSheetJS === 'undefined') {
+            console.log("Buscando librería en /static/...");
+            return;
+        }
 
-        // Buscamos todos los bloques de código (pre)
         const bloques = document.querySelectorAll('pre');
         
         bloques.forEach((bloque, i) => {
-            if (bloque.dataset.renderizado === "true") return;
+            if (bloque.dataset.musicDone === "true") return;
 
             const texto = bloque.innerText.trim();
-            // Detectamos si el bloque tiene formato ChordPro (corchetes)
+            // Detectamos si el bloque tiene el formato de acordes [C]
             if (texto.includes('[') && texto.includes(']')) {
                 try {
                     const parser = new ChordSheetJS.ChordProParser();
                     let cancion = parser.parse(texto);
                     const formateador = new ChordSheetJS.HtmlTableFormatter();
                     
-                    bloque.dataset.renderizado = "true";
+                    bloque.dataset.musicDone = "true";
                     const contenedor = document.createElement('div');
-                    contenedor.className = 'chord-interactive-container';
+                    contenedor.className = 'chord-interactive-box';
                     
-                    const dibujar = (s) => formateador.format(s);
+                    const render = (s) => formateador.format(s);
 
                     contenedor.innerHTML = `
-                        <div class="chord-controls">
-                            <button id="up-${i}" class="chord-btn">Tono +1</button>
-                            <button id="down-${i}" class="chord-btn">Tono -1</button>
-                            <span class="chord-label">MODO INTERACTIVO</span>
+                        <div class="chord-btns">
+                            <button id="up-${i}" class="m-btn">Tono +1</button>
+                            <button id="down-${i}" class="m-btn">Tono -1</button>
                         </div>
-                        <div id="visor-${i}" class="chord-render-area">${dibujar(cancion)}</div>
+                        <div id="render-${i}" class="m-render">${render(cancion)}</div>
                     `;
 
                     bloque.replaceWith(contenedor);
 
-                    // Eventos de transposición
                     contenedor.querySelector(`#up-${i}`).onclick = (e) => {
                         e.preventDefault();
                         cancion = cancion.transpose(1);
-                        contenedor.querySelector(`#visor-${i}`).innerHTML = dibujar(cancion);
+                        contenedor.querySelector(`#render-${i}`).innerHTML = render(cancion);
                     };
                     contenedor.querySelector(`#down-${i}`).onclick = (e) => {
                         e.preventDefault();
                         cancion = cancion.transpose(-1);
-                        contenedor.querySelector(`#visor-${i}`).innerHTML = dibujar(cancion);
+                        contenedor.querySelector(`#render-${i}`).innerHTML = render(cancion);
                     };
                 } catch (err) {
-                    console.error("Error al procesar la canción:", err);
+                    console.error("Error en la canción:", err);
                 }
             }
         });
     }
 
-    // Ejecutar el rastreador cada segundo para asegurar la interactividad
-    setInterval(transformarCanciones, 1000);
+    // Revisar cada segundo por si la página carga lento
+    setInterval(inicializar, 1000);
 })();
 </script>
 
 <style>
-    .chord-interactive-container {
+    .chord-interactive-box {
         background: #1e1e1e !important;
-        padding: 18px !important;
-        border-radius: 10px;
+        padding: 20px !important;
+        border-radius: 8px;
         border: 1px solid #333;
-        margin: 25px 0;
+        margin: 20px 0;
     }
-    .chord-controls { 
-        margin-bottom: 15px; 
-        display: flex; 
-        gap: 12px; 
-        align-items: center;
-        border-bottom: 1px solid #333;
-        padding-bottom: 10px;
-    }
-    .chord-btn { 
+    .chord-btns { margin-bottom: 15px; display: flex; gap: 10px; }
+    .m-btn { 
         background: #333; color: #fff; border: 1px solid #555; 
-        padding: 5px 12px; border-radius: 5px; cursor: pointer; 
-        font-size: 13px;
+        padding: 6px 12px; border-radius: 4px; cursor: pointer;
     }
-    .chord-btn:hover { background: #444; }
-    .chord-label { font-size: 10px; color: #666; font-weight: bold; letter-spacing: 1px; }
-
-    /* Renderizado de acordes */
-    .chord-render-area .chord { color: #4db6ac !important; font-weight: bold; display: block; height: 1.5em; }
-    .chord-render-area .lyrics { font-family: 'Courier New', monospace; white-space: pre; color: #ccc; }
-    .chord-render-area table { border-collapse: collapse !important; border: none !important; }
-    .chord-render-area td { padding: 0 2px !important; border: none !important; }
+    .m-render .chord { color: #4db6ac !important; font-weight: bold; display: block; height: 1.4em; }
+    .m-render .lyrics { font-family: monospace; white-space: pre; color: #ccc; }
+    .m-render table { border-collapse: collapse !important; border: none !important; }
+    .m-render td { padding: 0 2px !important; border: none !important; }
 </style>
