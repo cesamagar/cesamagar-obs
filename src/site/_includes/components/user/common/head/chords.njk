@@ -2,11 +2,10 @@
 
 <script>
 (function() {
-    function aplicarTransformacion() {
+    function transformar() {
         if (typeof ChordSheetJS === 'undefined') return;
 
         const bloques = document.querySelectorAll('pre');
-        
         bloques.forEach((bloque, i) => {
             if (bloque.dataset.renderizado === "true") return;
 
@@ -19,17 +18,17 @@
                     
                     bloque.dataset.renderizado = "true";
                     const contenedor = document.createElement('div');
-                    contenedor.className = 'chord-interactive-container';
+                    contenedor.className = 'chord-sheet-wrapper';
                     
-                    const render = (s) => formateador.format(s);
+                    const dibujar = (s) => formateador.format(s);
 
                     contenedor.innerHTML = `
-                        <div class="chord-controls">
-                            <button id="up-${i}" class="chord-btn">+1 Tono</button>
-                            <button id="down-${i}" class="chord-btn">-1 Tono</button>
-                            <span class="chord-badge">MODO INTERACTIVO</span>
+                        <div class="chord-toolbar">
+                            <button id="up-${i}" class="t-btn">+1 Tono</button>
+                            <button id="down-${i}" class="t-btn">-1 Tono</button>
+                            <span class="t-tag">INTERACTIVO</span>
                         </div>
-                        <div id="visor-${i}" class="chord-render-area">${render(cancion)}</div>
+                        <div id="visor-${i}" class="chord-render-area">${dibujar(cancion)}</div>
                     `;
 
                     bloque.replaceWith(contenedor);
@@ -37,89 +36,81 @@
                     contenedor.querySelector(`#up-${i}`).onclick = (e) => {
                         e.preventDefault();
                         cancion = cancion.transpose(1);
-                        contenedor.querySelector(`#visor-${i}`).innerHTML = render(cancion);
+                        contenedor.querySelector(`#visor-${i}`).innerHTML = dibujar(cancion);
                     };
                     contenedor.querySelector(`#down-${i}`).onclick = (e) => {
                         e.preventDefault();
                         cancion = cancion.transpose(-1);
-                        contenedor.querySelector(`#visor-${i}`).innerHTML = render(cancion);
+                        contenedor.querySelector(`#visor-${i}`).innerHTML = dibujar(cancion);
                     };
                 } catch (err) { console.error("Error:", err); }
             }
         });
     }
-    setInterval(aplicarTransformacion, 1000);
+    setInterval(transformar, 1000);
 })();
 </script>
 
 <style>
-    /* 1. Contenedor principal */
-    .chord-interactive-container {
+    /* 1. Contenedor y Toolbar */
+    .chord-sheet-wrapper {
         background: #1e1e1e !important;
         padding: 20px !important;
-        border-radius: 10px;
+        border-radius: 8px;
         border: 1px solid #333;
-        margin: 25px 0;
-        overflow-x: auto;
+        margin: 20px 0;
+        overflow-x: auto; /* Permite scroll si la línea es larga */
     }
+    .chord-toolbar { display: flex; gap: 10px; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #333; padding-bottom: 10px; }
+    .t-btn { background: #333 !important; color: white !important; border: 1px solid #555 !important; padding: 5px 12px !important; border-radius: 4px !important; cursor: pointer; font-size: 12px; }
+    .t-tag { font-size: 9px; color: #666; font-weight: bold; }
 
-    /* 2. Botones y cabecera */
-    .chord-controls { 
-        margin-bottom: 20px; 
-        display: flex; 
-        gap: 12px; 
-        align-items: center;
-        border-bottom: 1px solid #333;
-        padding-bottom: 12px;
-    }
-    .chord-btn { 
-        background: #333 !important; color: #fff !important; border: 1px solid #555 !important; 
-        padding: 6px 12px !important; border-radius: 5px !important; cursor: pointer; font-size: 13px;
-    }
-    .chord-badge { font-size: 10px; color: #666; font-weight: bold; letter-spacing: 1px; }
-
-    /* 3. RESET DE TABLA (Esto arregla la alineación) */
-    .chord-render-area table { 
-        border-collapse: collapse !important; 
-        border: none !important; 
-        width: auto !important; 
+    /* 2. ARREGLO DE ALINEACIÓN (CRÍTICO) */
+    .chord-render-area table {
+        display: inline-table !important; /* Mantiene la tabla compacta */
+        border-collapse: collapse !important;
+        border: none !important;
         margin: 0 !important;
-        display: table !important; /* Evita que se comporte como bloque */
-    }
-    .chord-render-area tr { 
-        border: none !important; 
-        display: table-row !important; 
-    }
-    .chord-render-area td { 
-        padding: 0 1px !important; 
-        border: none !important; 
-        line-height: 1 !important; /* Muy importante para que no se separen */
-        text-align: left !important;
-        display: table-cell !important;
+        line-height: 1 !important;
     }
 
-    /* 4. Tipografía y colores */
-    .chord-render-area .chord { 
-        color: #4db6ac !important; 
-        font-weight: bold !important; 
-        font-family: 'Courier New', Courier, monospace !important;
-        font-size: 14px !important;
-        display: inline-block !important; /* Cambiado de block a inline-block */
-        margin-bottom: 2px !important;
+    .chord-render-area tr {
+        display: flex !important; /* Convierte la fila en un flexbox horizontal */
+        flex-wrap: wrap !important;
+        border: none !important;
+        margin-bottom: 15px !important; /* Espacio entre líneas de la canción */
     }
-    .chord-render-area .lyrics { 
-        font-family: 'Courier New', Courier, monospace !important; 
-        white-space: pre !important; 
+
+    .chord-render-area td {
+        display: inline-flex !important;
+        flex-direction: column !important; /* Apila acorde arriba y letra abajo */
+        padding: 0 !important;
+        border: none !important;
+        min-width: 0.5em; /* Evita que celdas vacías colapsen */
+    }
+
+    /* 3. Estilos de Texto */
+    .chord-render-area .chord {
+        color: #4db6ac !important; /* Turquesa */
+        font-weight: bold !important;
+        font-family: 'Courier New', monospace !important;
+        font-size: 14px !important;
+        height: 1.4em !important; /* Espacio fijo para el acorde */
+        visibility: visible !important;
+        display: block !important;
+    }
+
+    .chord-render-area .lyrics {
         color: #ccc !important;
+        font-family: 'Courier New', monospace !important;
         font-size: 14px !important;
+        white-space: pre !important; /* Mantiene los espacios de la letra */
+        display: block !important;
+        margin-top: 2px !important;
     }
 
-    /* Ajuste para los títulos internos de ChordPro {title:} */
-    .chord-render-area .title { 
-        font-size: 1.5em; 
-        color: #ff7043; 
-        margin-bottom: 10px; 
-        display: block;
-        font-weight: bold;
+    /* Manejo de espacios en blanco en la letra */
+    .chord-render-area td:has(.lyrics:empty) {
+        min-width: 1ch;
     }
 </style>
