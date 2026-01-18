@@ -1,23 +1,16 @@
 <script src="https://unpkg.com/chordsheetjs/dist/chordsheetjs.umd.js"></script>
 
 <script>
-  // ESTO ES PARA SABER SI EL ARCHIVO SE CARGA
-  console.log("Intentando cargar sistema de acordes...");
-
-  document.addEventListener('DOMContentLoaded', () => {
-    // Alerta visual para confirmar que el script está vivo
-    const debugBanner = document.createElement('div');
-    debugBanner.style.cssText = "position:fixed; top:0; left:0; width:100%; background:red; color:white; z-index:9999; text-align:center; font-size:10px; pointer-events:none;";
-    debugBanner.innerText = "SCRIPTS DE ACORDES ACTIVOS";
-    document.body.appendChild(debugBanner);
-
-    const blocks = document.querySelectorAll('pre code.language-chords');
+document.addEventListener('DOMContentLoaded', () => {
+    // Buscamos bloques que Obsidian etiqueta como 'language-chords'
+    const chordBlocks = document.querySelectorAll('pre code.language-chords');
     
-    blocks.forEach((block, index) => {
+    chordBlocks.forEach((block, index) => {
         const rawContent = block.innerText;
         const parent = block.closest('pre');
 
         try {
+            // Usamos el parser de 'acordes sobre palabras' (típico de Chord Sheets)
             const parser = new ChordSheetJS.ChordsOverWordsParser();
             let song = parser.parse(rawContent);
             const formatter = new ChordSheetJS.HtmlTableFormatter();
@@ -29,28 +22,32 @@
 
             container.innerHTML = `
                 <div style="margin-bottom:15px; display:flex; gap:10px;">
-                    <button class="t-btn" data-dir="-1" style="padding:5px 10px; cursor:pointer;">-1 Semitono</button>
-                    <button class="t-btn" data-dir="1" style="padding:5px 10px; cursor:pointer;">+1 Semitono</button>
+                    <button id="up-${index}" style="padding:5px 10px; cursor:pointer;">+1 Tono</button>
+                    <button id="down-${index}" style="padding:5px 10px; cursor:pointer;">-1 Tono</button>
                 </div>
-                <div class="canvas">${render(song)}</div>
+                <div id="canvas-${index}">${render(song)}</div>
             `;
 
             parent.replaceWith(container);
 
-            container.querySelectorAll('.t-btn').forEach(btn => {
-                btn.onclick = () => {
-                    song = song.transpose(parseInt(btn.dataset.dir));
-                    container.querySelector('.canvas').innerHTML = render(song);
-                };
-            });
-        } catch (e) { console.error("Error en bloque", e); }
+            container.querySelector(`#up-${index}`).onclick = () => {
+                song = song.transpose(1);
+                container.querySelector(`#canvas-${index}`).innerHTML = render(song);
+            };
+            container.querySelector(`#down-${index}`).onclick = () => {
+                song = song.transpose(-1);
+                container.querySelector(`#canvas-${index}`).innerHTML = render(song);
+            };
+        } catch (e) {
+            console.error("Error procesando acordes:", e);
+        }
     });
-  });
+});
 </script>
 
 <style>
+    /* Estilos para que los acordes se vean bien sobre la letra */
     .chord { color: #5db9ff !important; font-weight: bold; height: 1.3em; display: block; }
-    .lyrics { font-family: 'Courier New', Courier, monospace; white-space: pre; color: #ccc; }
+    .lyrics { font-family: 'Courier New', monospace; white-space: pre; color: #ccc; }
     table { border-spacing: 0; margin-bottom: 5px; }
-    .t-btn:hover { background: #444; color: white; }
 </style>
