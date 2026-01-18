@@ -24,13 +24,3 @@
 
 { .block-language-dataview}
 
-
-```base
-filters:
-  and:
-    - Tipo.contains("Contenido/Audio/Música/Canción")
-views:
-  - type: table
-    name: Tabla
-```
-
