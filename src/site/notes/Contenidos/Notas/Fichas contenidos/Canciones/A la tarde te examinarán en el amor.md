@@ -17,10 +17,3 @@
 ```
 
 
-## Acordes
-
-```chords
-[I]
-[G]Esta es la cuva
-
-```
