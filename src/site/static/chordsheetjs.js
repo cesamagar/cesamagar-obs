@@ -1,0 +1,91 @@
+{
+  "name": "chordsheetjs",
+  "author": "Martijn Versluis",
+  "version": "13.0.1",
+  "description": "A JavaScript library for parsing and formatting chord sheets",
+  "source": "src/index.ts",
+  "main": "lib/index.js",
+  "module": "lib/module.js",
+  "types": "lib/main.d.ts",
+  "files": [
+    "/lib"
+  ],
+  "bundle": {
+    "default": "lib/bundle.js",
+    "minified": "lib/bundle.min.js",
+    "globalName": "ChordSheetJS"
+  },
+  "license": "GPL-2.0-only",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/martijnversluis/ChordSheetJS.git"
+  },
+  "bugs": {
+    "url": "https://github.com/martijnversluis/ChordSheetJS/issues"
+  },
+  "homepage": "https://github.com/martijnversluis/ChordSheetJS",
+  "engines": {
+    "node": ">=16"
+  },
+  "devDependencies": {
+    "@codemirror/commands": "^6.0.0",
+    "@codemirror/lang-json": "^6.0.0",
+    "@codemirror/language": "^6.0.0",
+    "@codemirror/lint": "^6.0.0",
+    "@codemirror/state": "^6.0.0",
+    "@codemirror/view": "^6.0.0",
+    "@eslint/core": "^1.0.0",
+    "@eslint/js": "^9.11.0",
+    "@martijnversluis/unibuild": "^2.0.3",
+    "@parcel/packager-ts": "^2.16.3",
+    "@parcel/transformer-typescript-types": "^2.16.3",
+    "@types/jest": "^30.0.0",
+    "@types/js-levenshtein": "^1",
+    "@types/node": "^25.0.3",
+    "@types/web": "^0.0.318",
+    "esbuild": "^0.27.2",
+    "eslint": "^9.11.0",
+    "eslint-config-airbnb": "^19.0.4",
+    "eslint-plugin-jest": "^29.0.0",
+    "globals": "^17.0.0",
+    "jest": "^30.0.0",
+    "js-levenshtein": "^1.1.6",
+    "parcel": "^2.16.3",
+    "peggy": "^5.0.2",
+    "pegjs-backtrace": "^0.2.1",
+    "print": "^1.2.0",
+    "process": "^0.11.10",
+    "puppeteer": "^24.0.0",
+    "theredoc": "^1.0.0",
+    "ts-jest": "^29.2.3",
+    "ts-node": "^10.9.2",
+    "ts-pegjs": "^3.0.0",
+    "tsx": "^4.10.5",
+    "typedoc": "^0.28.0",
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.6.0"
+  },
+  "scripts": {
+    "build": "yarn unibuild",
+    "build:release": "yarn unibuild --force --release",
+    "ci": "yarn install && yarn unibuild ci",
+    "debug:chord": "yarn build && tsx script/debug_parser.ts chord",
+    "debug:chordpro": "yarn build && tsx script/debug_parser.ts chord_pro",
+    "debug:chords-over-words": "yarn build && tsx script/debug_parser.ts chords_over_words --include-chord-grammar",
+    "dev": "parcel watch --no-cache",
+    "dev:pdf": "parcel test/formatter/pdf/index.html --port=3302",
+    "dev:html": "parcel test/formatter/pdf/html-test.html --port=3301",
+    "eslint": "node_modules/.bin/eslint",
+    "lint": "yarn unibuild lint",
+    "lint:fix": "yarn unibuild lint --fix",
+    "postversion": "yarn build:release",
+    "prepare": "yarn install && yarn build",
+    "release": "yarn unibuild release",
+    "test": "yarn unibuild lint && yarn unibuild test",
+    "playground": "cd playground && parcel index.html --port=3300 --no-cache"
+  },
+  "dependencies": {
+    "jspdf": "^4.0.0"
+  },
+  "packageManager": "yarn@4.2.2"
+}
