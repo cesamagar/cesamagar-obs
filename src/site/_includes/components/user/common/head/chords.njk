@@ -2,7 +2,7 @@
 
 <script>
 (function() {
-    function transformar() {
+    function renderizar() {
         if (typeof ChordSheetJS === 'undefined') return;
 
         const bloques = document.querySelectorAll('pre');
@@ -10,6 +10,7 @@
             if (bloque.dataset.renderizado === "true") return;
 
             const texto = bloque.innerText.trim();
+            // Detectamos si es formato ChordPro por los corchetes
             if (texto.includes('[') && texto.includes(']')) {
                 try {
                     const parser = new ChordSheetJS.ChordProParser();
@@ -18,15 +19,15 @@
                     
                     bloque.dataset.renderizado = "true";
                     const contenedor = document.createElement('div');
-                    contenedor.className = 'chord-sheet-wrapper';
+                    contenedor.className = 'chord-sheet-container';
                     
                     const dibujar = (s) => formateador.format(s);
 
                     contenedor.innerHTML = `
                         <div class="chord-toolbar">
-                            <button id="up-${i}" class="t-btn">+1 Tono</button>
-                            <button id="down-${i}" class="t-btn">-1 Tono</button>
-                            <span class="t-tag">INTERACTIVO</span>
+                            <button id="up-${i}" class="c-btn">+1 Tono</button>
+                            <button id="down-${i}" class="c-btn">-1 Tono</button>
+                            <span class="c-tag">MODO INTERACTIVO</span>
                         </div>
                         <div id="visor-${i}" class="chord-render-area">${dibujar(cancion)}</div>
                     `;
@@ -47,70 +48,75 @@
             }
         });
     }
-    setInterval(transformar, 1000);
+    // Ejecutar cada segundo para pillar cambios de página
+    setInterval(renderizar, 1000);
 })();
 </script>
 
 <style>
-    /* 1. Contenedor y Toolbar */
-    .chord-sheet-wrapper {
+    /* 1. Reset total del contenedor */
+    .chord-sheet-container {
         background: #1e1e1e !important;
         padding: 20px !important;
         border-radius: 8px;
         border: 1px solid #333;
         margin: 20px 0;
-        overflow-x: auto; /* Permite scroll si la línea es larga */
+        overflow-x: auto !important;
     }
-    .chord-toolbar { display: flex; gap: 10px; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #333; padding-bottom: 10px; }
-    .t-btn { background: #333 !important; color: white !important; border: 1px solid #555 !important; padding: 5px 12px !important; border-radius: 4px !important; cursor: pointer; font-size: 12px; }
-    .t-tag { font-size: 9px; color: #666; font-weight: bold; }
 
-    /* 2. ARREGLO DE ALINEACIÓN (CRÍTICO) */
+    /* 2. Toolbar */
+    .chord-toolbar { display: flex; gap: 10px; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #333; padding-bottom: 10px; }
+    .c-btn { background: #333 !important; color: white !important; border: 1px solid #555 !important; padding: 5px 12px !important; border-radius: 4px !important; cursor: pointer; font-size: 12px; }
+    .c-tag { font-size: 9px; color: #666; font-weight: bold; }
+
+    /* 3. ARREGLO DE ALINEACIÓN (CRÍTICO) */
+    /* Forzamos que la tabla no ocupe el 100% y que las celdas no tengan padding */
     .chord-render-area table {
-        display: inline-table !important; /* Mantiene la tabla compacta */
         border-collapse: collapse !important;
         border: none !important;
         margin: 0 !important;
-        line-height: 1 !important;
+        width: auto !important; /* Evita que la tabla se estire y desplace acordes */
+        table-layout: auto !important;
     }
 
     .chord-render-area tr {
-        display: flex !important; /* Convierte la fila en un flexbox horizontal */
-        flex-wrap: wrap !important;
         border: none !important;
-        margin-bottom: 15px !important; /* Espacio entre líneas de la canción */
+        background: none !important;
     }
 
     .chord-render-area td {
-        display: inline-flex !important;
-        flex-direction: column !important; /* Apila acorde arriba y letra abajo */
         padding: 0 !important;
         border: none !important;
-        min-width: 0.5em; /* Evita que celdas vacías colapsen */
+        vertical-align: bottom !important; /* Alinea letra a la base */
+        text-align: left !important;
+        min-width: 0.2em; /* Mantiene espacio mínimo */
     }
 
-    /* 3. Estilos de Texto */
+    /* 4. ESTILO DE ACORDE Y LETRA */
+    /* Forzamos que el acorde esté justo encima de la letra en la misma celda */
     .chord-render-area .chord {
-        color: #4db6ac !important; /* Turquesa */
+        color: #4db6ac !important; /* Turquesa de tus botones */
         font-weight: bold !important;
-        font-family: 'Courier New', monospace !important;
+        font-family: 'Courier New', Courier, monospace !important;
         font-size: 14px !important;
-        height: 1.4em !important; /* Espacio fijo para el acorde */
-        visibility: visible !important;
-        display: block !important;
+        display: block !important; /* El acorde ocupa su propia línea dentro de la celda */
+        height: 1.3em !important;
+        line-height: 1.3em !important;
+        margin: 0 !important;
     }
 
     .chord-render-area .lyrics {
         color: #ccc !important;
-        font-family: 'Courier New', monospace !important;
+        font-family: 'Courier New', Courier, monospace !important;
         font-size: 14px !important;
-        white-space: pre !important; /* Mantiene los espacios de la letra */
-        display: block !important;
-        margin-top: 2px !important;
+        display: block !important; /* La letra ocupa su propia línea debajo del acorde */
+        line-height: 1.3em !important;
+        white-space: pre !important; /* MANTIENE LOS ESPACIOS CLAVE */
+        margin: 0 !important;
     }
 
-    /* Manejo de espacios en blanco en la letra */
-    .chord-render-area td:has(.lyrics:empty) {
-        min-width: 1ch;
+    /* Manejo de celdas que solo tienen letra (sin acorde arriba) */
+    .chord-render-area td:not(:has(.chord)) .lyrics {
+        margin-top: 1.3em !important; /* Empuja la letra hacia abajo para alinearla con el resto */
     }
 </style>
