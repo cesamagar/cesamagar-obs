@@ -1,111 +1,92 @@
-<script src="https://cdn.jsdelivr.net/npm/chordsheetjs@8.5.1/dist/chordsheetjs.umd.js" 
-        crossorigin="anonymous" 
-        onload="window.chordLibraryLoaded = true;"></script>
+<script src="/js/chordsheetjs.js"></script>
 
 <script>
 (function() {
-    function ejecutarTransformacion() {
-        if (!window.ChordSheetJS) {
-            console.log("Esperando a ChordSheetJS...");
-            return;
-        }
+    function transformarCanciones() {
+        // Verificamos que la librería esté cargada en memoria
+        if (typeof ChordSheetJS === 'undefined') return;
 
+        // Buscamos todos los bloques de código (pre)
         const bloques = document.querySelectorAll('pre');
         
         bloques.forEach((bloque, i) => {
-            if (bloque.dataset.musicDone === "true") return;
+            if (bloque.dataset.renderizado === "true") return;
 
-            const contenido = bloque.innerText.trim();
-            // Detectamos si es formato ChordPro (tu formato con [])
-            if (contenido.includes('[') && contenido.includes(']')) {
+            const texto = bloque.innerText.trim();
+            // Detectamos si el bloque tiene formato ChordPro (corchetes)
+            if (texto.includes('[') && texto.includes(']')) {
                 try {
                     const parser = new ChordSheetJS.ChordProParser();
-                    let cancion = parser.parse(contenido);
+                    let cancion = parser.parse(texto);
                     const formateador = new ChordSheetJS.HtmlTableFormatter();
                     
-                    bloque.dataset.musicDone = "true";
-                    const container = document.createElement('div');
-                    container.className = 'chord-sheet-container';
+                    bloque.dataset.renderizado = "true";
+                    const contenedor = document.createElement('div');
+                    contenedor.className = 'chord-interactive-container';
                     
-                    const renderizar = (s) => formateador.format(s);
+                    const dibujar = (s) => formateador.format(s);
 
-                    container.innerHTML = `
-                        <div class="chord-header">
+                    contenedor.innerHTML = `
+                        <div class="chord-controls">
                             <button id="up-${i}" class="chord-btn">Tono +1</button>
                             <button id="down-${i}" class="chord-btn">Tono -1</button>
-                            <span class="chord-badge">MODO INTERACTIVO</span>
+                            <span class="chord-label">MODO INTERACTIVO</span>
                         </div>
-                        <div id="visor-${i}" class="chord-body">${renderizar(cancion)}</div>
+                        <div id="visor-${i}" class="chord-render-area">${dibujar(cancion)}</div>
                     `;
 
-                    bloque.replaceWith(container);
+                    bloque.replaceWith(contenedor);
 
-                    container.querySelector(`#up-${i}`).onclick = (e) => {
+                    // Eventos de transposición
+                    contenedor.querySelector(`#up-${i}`).onclick = (e) => {
                         e.preventDefault();
                         cancion = cancion.transpose(1);
-                        container.querySelector(`#visor-${i}`).innerHTML = renderizar(cancion);
+                        contenedor.querySelector(`#visor-${i}`).innerHTML = dibujar(cancion);
                     };
-                    container.querySelector(`#down-${i}`).onclick = (e) => {
+                    contenedor.querySelector(`#down-${i}`).onclick = (e) => {
                         e.preventDefault();
                         cancion = cancion.transpose(-1);
-                        container.querySelector(`#visor-${i}`).innerHTML = renderizar(cancion);
+                        contenedor.querySelector(`#visor-${i}`).innerHTML = dibujar(cancion);
                     };
                 } catch (err) {
-                    console.error("Error en bloque " + i, err);
+                    console.error("Error al procesar la canción:", err);
                 }
             }
         });
     }
 
-    // Intentar ejecutar cada segundo
-    setInterval(ejecutarTransformacion, 1000);
+    // Ejecutar el rastreador cada segundo para asegurar la interactividad
+    setInterval(transformarCanciones, 1000);
 })();
 </script>
 
 <style>
-    /* Estilos optimizados para el tema oscuro */
-    .chord-sheet-container {
+    .chord-interactive-container {
         background: #1e1e1e !important;
-        color: #d4d4d4 !important;
-        padding: 20px !important;
-        border-radius: 8px;
+        padding: 18px !important;
+        border-radius: 10px;
         border: 1px solid #333;
-        margin: 20px 0;
-        overflow-x: auto;
+        margin: 25px 0;
     }
-    .chord-header {
-        display: flex;
-        gap: 10px;
-        margin-bottom: 15px;
-        padding-bottom: 10px;
-        border-bottom: 1px solid #333;
+    .chord-controls { 
+        margin-bottom: 15px; 
+        display: flex; 
+        gap: 12px; 
         align-items: center;
+        border-bottom: 1px solid #333;
+        padding-bottom: 10px;
     }
-    .chord-btn {
-        background: #333;
-        color: white;
-        border: 1px solid #444;
-        padding: 4px 12px;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 12px;
+    .chord-btn { 
+        background: #333; color: #fff; border: 1px solid #555; 
+        padding: 5px 12px; border-radius: 5px; cursor: pointer; 
+        font-size: 13px;
     }
     .chord-btn:hover { background: #444; }
-    .chord-badge { font-size: 9px; color: #666; font-weight: bold; }
+    .chord-label { font-size: 10px; color: #666; font-weight: bold; letter-spacing: 1px; }
 
-    /* Estilos del renderizado de acordes */
-    .chord-body table { border-collapse: collapse !important; border: none !important; }
-    .chord-body td { padding: 0 2px !important; border: none !important; }
-    .chord-body .chord { 
-        color: #4db6ac !important; 
-        font-weight: bold; 
-        height: 1.4em;
-        display: block;
-        font-family: monospace;
-    }
-    .chord-body .lyrics { 
-        font-family: 'Courier New', monospace; 
-        white-space: pre;
-        color: #ccc;
-    }
+    /* Renderizado de acordes */
+    .chord-render-area .chord { color: #4db6ac !important; font-weight: bold; display: block; height: 1.5em; }
+    .chord-render-area .lyrics { font-family: 'Courier New', monospace; white-space: pre; color: #ccc; }
+    .chord-render-area table { border-collapse: collapse !important; border: none !important; }
+    .chord-render-area td { padding: 0 2px !important; border: none !important; }
 </style>
