@@ -1,39 +1,45 @@
-<script src="/static/chordsheetjs.js"></script>
+<script src="https://unpkg.com/chordsheetjs@13.0.1/lib/bundle.js"></script>
 
 <script>
 (function() {
-    function inicializar() {
-        // Verificamos si la librería ya está en la memoria del navegador
+    function inicializarInteractivo() {
+        // Verificamos si la librería cargó (en v13 se accede vía window.ChordSheetJS)
         if (typeof ChordSheetJS === 'undefined') {
-            console.log("Buscando librería en /static/...");
+            console.log("Esperando a que ChordSheetJS cargue desde la red...");
             return;
         }
 
+        // Buscamos los bloques de código que Obsidian llama "chords"
         const bloques = document.querySelectorAll('pre');
-        
+
         bloques.forEach((bloque, i) => {
-            if (bloque.dataset.musicDone === "true") return;
+            if (bloque.dataset.renderizado === "true") return;
 
             const texto = bloque.innerText.trim();
-            // Detectamos si el bloque tiene el formato de acordes [C]
-            if (texto.includes('[') && texto.includes(']')) {
+            // Detectamos si es tu formato ChordPro o tiene la clase chords
+            const esMusica = texto.includes('[') && texto.includes(']') || bloque.classList.contains('language-chords');
+
+            if (esMusica) {
+                console.log("¡Canción detectada! Transformando...");
                 try {
+                    // En v13, los parsers están dentro del objeto ChordSheetJS
                     const parser = new ChordSheetJS.ChordProParser();
                     let cancion = parser.parse(texto);
                     const formateador = new ChordSheetJS.HtmlTableFormatter();
                     
-                    bloque.dataset.musicDone = "true";
+                    bloque.dataset.renderizado = "true";
                     const contenedor = document.createElement('div');
-                    contenedor.className = 'chord-interactive-box';
+                    contenedor.className = 'chord-sheet-container';
                     
-                    const render = (s) => formateador.format(s);
+                    const dibujar = (s) => formateador.format(s);
 
                     contenedor.innerHTML = `
-                        <div class="chord-btns">
-                            <button id="up-${i}" class="m-btn">Tono +1</button>
-                            <button id="down-${i}" class="m-btn">Tono -1</button>
+                        <div class="chord-controls" style="margin-bottom:15px; display:flex; gap:10px; align-items:center;">
+                            <button class="c-btn" id="up-${i}">+1 Tono</button>
+                            <button class="c-btn" id="down-${i}">-1 Tono</button>
+                            <span style="font-size:10px; color:#666; font-weight:bold;">MODO INTERACTIVO</span>
                         </div>
-                        <div id="render-${i}" class="m-render">${render(cancion)}</div>
+                        <div id="visor-${i}" class="chord-render-area">${dibujar(cancion)}</div>
                     `;
 
                     bloque.replaceWith(contenedor);
@@ -41,40 +47,58 @@
                     contenedor.querySelector(`#up-${i}`).onclick = (e) => {
                         e.preventDefault();
                         cancion = cancion.transpose(1);
-                        contenedor.querySelector(`#render-${i}`).innerHTML = render(cancion);
+                        contenedor.querySelector(`#visor-${i}`).innerHTML = dibujar(cancion);
                     };
                     contenedor.querySelector(`#down-${i}`).onclick = (e) => {
                         e.preventDefault();
                         cancion = cancion.transpose(-1);
-                        contenedor.querySelector(`#render-${i}`).innerHTML = render(cancion);
+                        contenedor.querySelector(`#visor-${i}`).innerHTML = dibujar(cancion);
                     };
                 } catch (err) {
-                    console.error("Error en la canción:", err);
+                    console.error("Error al procesar canción:", err);
                 }
             }
         });
     }
 
-    // Revisar cada segundo por si la página carga lento
-    setInterval(inicializar, 1000);
+    // Ejecutar cada segundo para asegurar que pille la carga dinámica
+    setInterval(inicializarInteractivo, 1000);
 })();
 </script>
 
 <style>
-    .chord-interactive-box {
+    .chord-sheet-container {
         background: #1e1e1e !important;
         padding: 20px !important;
-        border-radius: 8px;
+        border-radius: 10px;
         border: 1px solid #333;
         margin: 20px 0;
+        overflow-x: auto;
     }
-    .chord-btns { margin-bottom: 15px; display: flex; gap: 10px; }
-    .m-btn { 
-        background: #333; color: #fff; border: 1px solid #555; 
-        padding: 6px 12px; border-radius: 4px; cursor: pointer;
+    .c-btn {
+        background: #333;
+        color: white;
+        border: 1px solid #555;
+        padding: 6px 14px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 13px;
     }
-    .m-render .chord { color: #4db6ac !important; font-weight: bold; display: block; height: 1.4em; }
-    .m-render .lyrics { font-family: monospace; white-space: pre; color: #ccc; }
-    .m-render table { border-collapse: collapse !important; border: none !important; }
-    .m-render td { padding: 0 2px !important; border: none !important; }
+    .c-btn:hover { background: #444; }
+    
+    /* Estilos para que los acordes se vean bien sobre la letra */
+    .chord-render-area table { border-collapse: collapse !important; border: none !important; width: auto !important; }
+    .chord-render-area td { padding: 0 2px !important; border: none !important; }
+    .chord-render-area .chord { 
+        color: #4db6ac !important; 
+        font-weight: bold; 
+        height: 1.5em;
+        display: block;
+        font-family: 'Courier New', monospace;
+    }
+    .chord-render-area .lyrics { 
+        font-family: 'Courier New', monospace; 
+        white-space: pre;
+        color: #ccc;
+    }
 </style>
