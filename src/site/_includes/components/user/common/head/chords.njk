@@ -1,113 +1,107 @@
-<script src="[https://unpkg.com/chordsheetjs/dist/chordsheetjs.umd.js](https://unpkg.com/chordsheetjs/dist/chordsheetjs.umd.js)"></script>
+<script src="https://unpkg.com/chordsheetjs/dist/chordsheetjs.umd.js"></script>
 
 <script>
 (function() {
-    function renderizarCanciones() {
-        // Buscamos los bloques que Obsidian marca como "chords"
-        // Digital Garden suele generar: <pre class="language-chords"><code class="language-chords">
-        const bloques = document.querySelectorAll('pre[class*="language-chords"], code[class*="language-chords"]');
+    function renderChords() {
+        // 1. Buscamos TODOS los bloques de código de la página sin excepción
+        const elements = document.querySelectorAll('pre');
+        
+        elements.forEach((pre) => {
+            // Evitar procesar lo mismo varias veces
+            if (pre.dataset.chordified === "true") return;
 
-        bloques.forEach((el, index) => {
-            // Si ya lo hemos procesado o es un contenedor interno, saltamos
-            if (el.dataset.musicParsed === "true" || el.tagName === 'CODE' && el.parentElement.tagName === 'PRE' && el.parentElement.dataset.musicParsed === "true") return;
+            const text = pre.innerText.trim();
 
-            const contenidoRaw = el.innerText.trim();
-            if (!contenidoRaw) return;
+            // 2. ¿Tiene pinta de canción? 
+            // Buscamos etiquetas típicas de ChordPro o la presencia de corchetes
+            const isChordPro = text.includes('[') && text.includes(']') || text.includes('{title:');
 
-            try {
-                // Usamos el Parser de ChordPro (específico para tu formato)
-                const parser = new ChordSheetJS.ChordProParser();
-                let cancion = parser.parse(contenidoRaw);
-                const formateador = new ChordSheetJS.HtmlTableFormatter();
+            if (isChordPro) {
+                console.log("¡Canción detectada por contenido!");
+                try {
+                    const parser = new ChordSheetJS.ChordProParser();
+                    let song = parser.parse(text);
+                    const formatter = new ChordSheetJS.HtmlTableFormatter();
+                    
+                    pre.dataset.chordified = "true";
+                    const container = document.createElement('div');
+                    container.className = 'chord-sheet-wrapper';
 
-                // Creamos el contenedor visual
-                const contenedor = document.createElement('div');
-                contenedor.className = 'cancion-interactiva';
-                el.dataset.musicParsed = "true";
+                    const doRender = (s) => formatter.format(s);
 
-                const dibujar = (s) => formateador.format(s);
+                    container.innerHTML = `
+                        <div class="chord-toolbar">
+                            <button class="t-btn" id="up">Tono +1</button>
+                            <button class="t-btn" id="down">Tono -1</button>
+                            <span class="t-badge">MODO INTERACTIVO</span>
+                        </div>
+                        <div class="chord-render-area">${doRender(song)}</div>
+                    `;
 
-                contenedor.innerHTML = `
-                    <div class="controles-musica">
-                        <button class="btn-tono" id="subir-${index}">+1 Tono</button>
-                        <button class="btn-tono" id="bajar-${index}">-1 Tono</button>
-                        <span class="info-tono">Interactivo ChordPro</span>
-                    </div>
-                    <div id="visor-${index}" class="visor-musica">${dibujar(cancion)}</div>
-                `;
+                    pre.replaceWith(container);
 
-                // Reemplazamos el bloque original
-                const objetivo = el.tagName === 'CODE' ? el.parentElement : el;
-                objetivo.replaceWith(contenedor);
+                    container.querySelector('#up').onclick = () => {
+                        song = song.transpose(1);
+                        container.querySelector('.chord-render-area').innerHTML = doRender(song);
+                    };
+                    container.querySelector('#down').onclick = () => {
+                        song = song.transpose(-1);
+                        container.querySelector('.chord-render-area').innerHTML = doRender(song);
+                    };
 
-                // Lógica de botones
-                contenedor.querySelector(`#subir-${index}`).onclick = (e) => {
-                    e.preventDefault();
-                    cancion = cancion.transpose(1);
-                    contenedor.querySelector(`#visor-${index}`).innerHTML = dibujar(cancion);
-                };
-                contenedor.querySelector(`#bajar-${index}`).onclick = (e) => {
-                    e.preventDefault();
-                    cancion = cancion.transpose(-1);
-                    contenedor.querySelector(`#visor-${index}`).innerHTML = dibujar(cancion);
-                };
-
-            } catch (error) {
-                console.error("Error procesando ChordPro:", error);
+                } catch (e) {
+                    console.error("Error al parsear canción:", e);
+                }
             }
         });
     }
 
-    // Ejecutar al cargar la página
-    window.addEventListener('load', renderizarCanciones);
-    
-    // Ejecutar cada vez que el contenido de la nota cambie (para navegación SPA de Digital Garden)
-    const observer = new MutationObserver(renderizarCanciones);
-    observer.observe(document.body, { childList: true, subtree: true });
-    
-    // Ejecución de respaldo
-    setTimeout(renderizarCanciones, 1000);
+    // Ejecutar en bucle corto al principio para pillar la carga de Vercel
+    window.addEventListener('load', renderChords);
+    setInterval(renderChords, 1500); // Re-intento cada 1.5s por si la web es lenta
 })();
 </script>
 
 <style>
-    .cancion-interactiva {
-        background: #1a1a1b !important;
-        color: #d7dadc !important;
+    .chord-sheet-wrapper {
+        background: #111 !important;
+        color: #eee !important;
         padding: 20px !important;
         border-radius: 8px;
         margin: 20px 0;
-        border: 1px solid #343536;
-        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        border: 1px solid #444;
+        overflow-x: auto;
     }
-    .controles-musica {
+    .chord-toolbar {
         display: flex;
-        gap: 8px;
-        margin-bottom: 20px;
+        gap: 10px;
+        margin-bottom: 15px;
         align-items: center;
-        border-bottom: 1px solid #343536;
-        padding-bottom: 10px;
     }
-    .btn-tono {
-        background: #343536;
-        color: white;
-        border: 1px solid #474748;
-        padding: 4px 12px;
+    .t-btn {
+        background: #333;
+        color: #fff;
+        border: 1px solid #555;
+        padding: 4px 10px;
         border-radius: 4px;
         cursor: pointer;
-        font-size: 13px;
+        font-size: 12px;
     }
-    .btn-tono:hover { background: #474748; }
-    .info-tono { font-size: 11px; color: #818384; text-transform: uppercase; letter-spacing: 1px; }
+    .t-badge { font-size: 10px; color: #777; font-weight: bold; }
     
-    /* Estilos del renderizado de la canción */
-    .visor-musica table { border-collapse: collapse; border: none !important; }
-    .visor-musica td { padding: 0 2px !important; border: none !important; vertical-align: bottom; }
-    .visor-musica .chord { 
-        color: #ffb74d !important; /* Naranja para los acordes */
+    /* Estilos para que los acordes NO se muevan */
+    .chord-render-area table { border-collapse: collapse; border: none !important; width: auto !important; }
+    .chord-render-area td { padding: 0 1px !important; border: none !important; }
+    .chord-render-area .chord { 
+        color: #4da6ff !important; 
         font-weight: bold; 
-        height: 1.4em; 
+        font-family: monospace;
+        height: 1.4em;
         display: block;
     }
-    .visor-musica .lyrics { color: #d7dadc; white-space: pre; }
+    .chord-render-area .lyrics { 
+        font-family: monospace; 
+        white-space: pre;
+        color: #ccc;
+    }
 </style>
