@@ -10,14 +10,17 @@
 ---
 ## Documento
 
-<iframe 
-    src="https://chordly.io/play/a-la-tarde-te-examinarn-en-el-amor-by-san-juan-de-la-cruz/9z1dExaSScyA8R9ZmGVeMw" 
-    style="width:100%; height:600px; border:none; border-radius: 8px;" 
-    allowfullscreen>
-</iframe>
+```chords
+{title: Mi Canción}
+{key: G}
+[G]Esta es una [C]letra con [D]acordes
+```
+
 
 ## Acordes
 
 ```chords
 [I]
+[G]Esta es la cuva
+
 ```
