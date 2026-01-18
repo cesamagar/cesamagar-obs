@@ -1,75 +1,113 @@
-<script src="https://unpkg.com/chordsheetjs/dist/chordsheetjs.umd.js"></script>
+<script src="[https://unpkg.com/chordsheetjs/dist/chordsheetjs.umd.js](https://unpkg.com/chordsheetjs/dist/chordsheetjs.umd.js)"></script>
 
 <script>
 (function() {
-    function transformar() {
-        console.log("--- RASTREADOR DE ACORDES ACTIVO ---");
-        
-        // 1. Buscamos TODOS los bloques de código de la página
-        const todosLosBloques = document.querySelectorAll('pre');
-        console.log("Bloques detectados en total:", todosLosBloques.length);
+    function renderizarCanciones() {
+        // Buscamos los bloques que Obsidian marca como "chords"
+        // Digital Garden suele generar: <pre class="language-chords"><code class="language-chords">
+        const bloques = document.querySelectorAll('pre[class*="language-chords"], code[class*="language-chords"]');
 
-        todosLosBloques.forEach((bloque, i) => {
-            const texto = bloque.innerText;
-            
-            // 2. Si el bloque ya está procesado o está vacío, saltamos
-            if (bloque.dataset.musicDone === "true" || !texto.trim()) return;
+        bloques.forEach((el, index) => {
+            // Si ya lo hemos procesado o es un contenedor interno, saltamos
+            if (el.dataset.musicParsed === "true" || el.tagName === 'CODE' && el.parentElement.tagName === 'PRE' && el.parentElement.dataset.musicParsed === "true") return;
 
-            // 3. ¿Parece una canción? (Buscamos si tiene [Acordes] o patrones de música)
-            const tieneCorchetes = texto.includes('[') && texto.includes(']');
-            const tieneClaseChords = bloque.innerHTML.includes('chords') || bloque.className.includes('chords');
+            const contenidoRaw = el.innerText.trim();
+            if (!contenidoRaw) return;
 
-            if (tieneCorchetes || tieneClaseChords) {
-                console.log("¡CANCION ENCONTRADA en el bloque!", i);
-                try {
-                    const parser = tieneCorchetes ? 
-                        new ChordSheetJS.ChordProParser() : 
-                        new ChordSheetJS.ChordsOverWordsParser();
-                    
-                    let song = parser.parse(texto);
-                    const formatter = new ChordSheetJS.HtmlTableFormatter();
-                    bloque.dataset.musicDone = "true";
+            try {
+                // Usamos el Parser de ChordPro (específico para tu formato)
+                const parser = new ChordSheetJS.ChordProParser();
+                let cancion = parser.parse(contenidoRaw);
+                const formateador = new ChordSheetJS.HtmlTableFormatter();
 
-                    const div = document.createElement('div');
-                    div.style.cssText = "background:#1e1e1e; color:#eee; padding:20px; border-radius:10px; margin:20px 0; border:1px solid #444;";
-                    
-                    const dibujar = (s) => formatter.format(s);
+                // Creamos el contenedor visual
+                const contenedor = document.createElement('div');
+                contenedor.className = 'cancion-interactiva';
+                el.dataset.musicParsed = "true";
 
-                    div.innerHTML = `
-                        <div style="margin-bottom:15px; display:flex; gap:10px;">
-                            <button id="u-${i}" style="padding:5px 12px; background:#333; color:white; border:1px solid #555; cursor:pointer;">+1 Tono</button>
-                            <button id="d-${i}" style="padding:5px 12px; background:#333; color:white; border:1px solid #555; cursor:pointer;">-1 Tono</button>
-                        </div>
-                        <div id="c-${i}" class="musica-render">${dibujar(song)}</div>
-                    `;
+                const dibujar = (s) => formateador.format(s);
 
-                    bloque.replaceWith(div);
+                contenedor.innerHTML = `
+                    <div class="controles-musica">
+                        <button class="btn-tono" id="subir-${index}">+1 Tono</button>
+                        <button class="btn-tono" id="bajar-${index}">-1 Tono</button>
+                        <span class="info-tono">Interactivo ChordPro</span>
+                    </div>
+                    <div id="visor-${index}" class="visor-musica">${dibujar(cancion)}</div>
+                `;
 
-                    div.querySelector(`#u-${i}`).onclick = () => {
-                        song = song.transpose(1);
-                        div.querySelector(`#c-${i}`).innerHTML = dibujar(song);
-                    };
-                    div.querySelector(`#d-${i}`).onclick = () => {
-                        song = song.transpose(-1);
-                        div.querySelector(`#c-${i}`).innerHTML = dibujar(song);
-                    };
-                } catch (err) {
-                    console.error("Error al renderizar:", err);
-                }
+                // Reemplazamos el bloque original
+                const objetivo = el.tagName === 'CODE' ? el.parentElement : el;
+                objetivo.replaceWith(contenedor);
+
+                // Lógica de botones
+                contenedor.querySelector(`#subir-${index}`).onclick = (e) => {
+                    e.preventDefault();
+                    cancion = cancion.transpose(1);
+                    contenedor.querySelector(`#visor-${index}`).innerHTML = dibujar(cancion);
+                };
+                contenedor.querySelector(`#bajar-${index}`).onclick = (e) => {
+                    e.preventDefault();
+                    cancion = cancion.transpose(-1);
+                    contenedor.querySelector(`#visor-${index}`).innerHTML = dibujar(cancion);
+                };
+
+            } catch (error) {
+                console.error("Error procesando ChordPro:", error);
             }
         });
     }
 
-    // Intentamos ejecutar en varios momentos para asegurar el tiro
-    window.addEventListener('load', transformar);
-    setTimeout(transformar, 500);
-    setTimeout(transformar, 2000);
+    // Ejecutar al cargar la página
+    window.addEventListener('load', renderizarCanciones);
+    
+    // Ejecutar cada vez que el contenido de la nota cambie (para navegación SPA de Digital Garden)
+    const observer = new MutationObserver(renderizarCanciones);
+    observer.observe(document.body, { childList: true, subtree: true });
+    
+    // Ejecución de respaldo
+    setTimeout(renderizarCanciones, 1000);
 })();
 </script>
 
 <style>
-    .musica-render .chord { color: #5db9ff !important; font-weight: bold; height: 1.3em; display: block; }
-    .musica-render .lyrics { font-family: 'Courier New', monospace; white-space: pre; color: #ccc; }
-    .musica-render table { border-spacing: 0; margin-bottom: 5px; border:none; }
-    .musica-render td { padding: 0 2px; border:none; }
+    .cancion-interactiva {
+        background: #1a1a1b !important;
+        color: #d7dadc !important;
+        padding: 20px !important;
+        border-radius: 8px;
+        margin: 20px 0;
+        border: 1px solid #343536;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+    .controles-musica {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 20px;
+        align-items: center;
+        border-bottom: 1px solid #343536;
+        padding-bottom: 10px;
+    }
+    .btn-tono {
+        background: #343536;
+        color: white;
+        border: 1px solid #474748;
+        padding: 4px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 13px;
+    }
+    .btn-tono:hover { background: #474748; }
+    .info-tono { font-size: 11px; color: #818384; text-transform: uppercase; letter-spacing: 1px; }
+    
+    /* Estilos del renderizado de la canción */
+    .visor-musica table { border-collapse: collapse; border: none !important; }
+    .visor-musica td { padding: 0 2px !important; border: none !important; vertical-align: bottom; }
+    .visor-musica .chord { 
+        color: #ffb74d !important; /* Naranja para los acordes */
+        font-weight: bold; 
+        height: 1.4em; 
+        display: block;
+    }
+    .visor-musica .lyrics { color: #d7dadc; white-space: pre; }
 </style>
