@@ -3,6 +3,27 @@
 ---
 
 
+| File                                                                                                                                                                                   | Autor                                                                                                               |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| [[Contenidos/Notas/Fichas contenidos/Canciones/Alma de cristo\|Alma de cristo]]                                                                                                     | \-                                                                                                                  |
+| [[Contenidos/Notas/Fichas contenidos/Canciones/A la orilla te llamé - Jesús\|A la orilla te llamé - Jesús]]                                                                         | <ul><li>Jesús novicio 24-25</li></ul>                                                                               |
+| [[Contenidos/Notas/Fichas contenidos/Canciones/Arranca de mi pecho - Alejandro Ruiz\|Arranca de mi pecho - Alejandro Ruiz]]                                                         | <ul><li>Alejandro Ruiz</li></ul>                                                                                    |
+| [[Contenidos/Notas/Fichas contenidos/Canciones/En ti - Ain Karem\|En ti - Ain Karem]]                                                                                               | <ul><li>[[Ain Karem\\|Ain Karem]]</li></ul>                                                                         |
+| [[Contenidos/Notas/Fichas contenidos/Canciones/Little Blue MS - Jacob Collier\|Little Blue MS - Jacob Collier]]                                                                     | <ul><li>[[Jacob Collier\\|Jacob Collier]]</li></ul>                                                                 |
+| [[Contenidos/Notas/Fichas contenidos/Canciones/Canto Gregoriano - Monjes benedictinos de Santo Domingo de Silos\|Canto Gregoriano - Monjes benedictinos de Santo Domingo de Silos]] | <ul><li>[[Monjes benedictinos de Santo Domingo de Silos\\|Monjes benedictinos de Santo Domingo de Silos]]</li></ul> |
+| [[Contenidos/Notas/Fichas contenidos/Canciones/Los jóvenes macabeos\|Los jóvenes macabeos]]                                                                                         | <ul><li>[[Hermana Clare Crockett\\|Hermana Clare Crockett]]</li></ul>                                               |
+| [[Contenidos/Notas/Fichas contenidos/Canciones/Bendito\|Bendito]]                                                                                                                   | \-                                                                                                                  |
+| [[Contenidos/Notas/Fichas contenidos/Canciones/Por amor - Ain Karem\|Por amor - Ain Karem]]                                                                                         | <ul><li>[[Ain Karem\\|Ain Karem]]</li></ul>                                                                         |
+| [[Contenidos/Notas/Fichas contenidos/Canciones/Mira a la estrella - Emmanuel Music Español\|Mira a la estrella - Emmanuel Music Español]]                                           | <ul><li>Emmanuel Music Español</li><li>[[San Bernardo de Claraval\\|San Bernardo de Claraval]]</li></ul>            |
+| [[Contenidos/Notas/Fichas contenidos/Canciones/Prefiero el paraíso - Hermana Clare\|Prefiero el paraíso - Hermana Clare]]                                                           | <ul><li>[[Hermana Clare Crockett\\|Hermana Clare Crockett]]</li></ul>                                               |
+| [[Contenidos/Notas/Fichas contenidos/Canciones/Tu amor me transforma - Jesús\|Tu amor me transforma - Jesús]]                                                                       | <ul><li>Jesús novicio 24-25</li></ul>                                                                               |
+| [[Contenidos/Notas/Fichas contenidos/Canciones/Venid conmigo - Ain Karem\|Venid conmigo - Ain Karem]]                                                                               | <ul><li>[[Ain Karem\\|Ain Karem]]</li></ul>                                                                         |
+| [[Contenidos/Notas/Fichas contenidos/Canciones/This Psalm Sounds Like It Was Born in the Blues\|This Psalm Sounds Like It Was Born in the Blues]]                                   | <ul><li>[[Holy Groove\\|Holy Groove]]</li></ul>                                                                     |
+| [[Contenidos/Notas/Fichas contenidos/Canciones/Surge Valentía - Misión País 22\|Surge Valentía - Misión País 22]]                                                                   | <ul><li>[[Misión País 22\\|Misión País 22]]</li></ul>                                                               |
+| [[Contenidos/Notas/Fichas contenidos/Canciones/Y Rozar Contigo - Robe\|Y Rozar Contigo - Robe]]                                                                                     | <ul><li>[[Robe\\|Robe]]</li><li>[[Robe Iniesta\\|Robe Iniesta]]</li></ul>                                           |
+
+{ .block-language-dataview}
+
 
 ```base
 filters:
